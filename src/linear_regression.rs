@@ -18,7 +18,7 @@ pub mod linear_regression {
             self.a * x + self.b
         }
 
-        pub fn load_linear_model() -> Result<Self, Box<dyn Error>> {
+        pub fn load() -> Result<Self, Box<dyn Error>> {
             let file = File::open(MODEL_PATH)?;
             let mut reader = csv::Reader::from_reader(file);
             if let Some(result) = reader.deserialize().next() {
@@ -29,7 +29,7 @@ pub mod linear_regression {
             }
         }
 
-        pub fn save_linear_model(&self) -> Result<(), Box<dyn Error>> {
+        pub fn save(&self) -> Result<(), Box<dyn Error>> {
             let mut writer = Writer::from_path(MODEL_PATH)?;
             writer.serialize(self)?;
             writer.flush()?;
@@ -38,24 +38,22 @@ pub mod linear_regression {
 
         pub fn train(&mut self, dataset: &Dataset, size: usize) {
             for _ in 0..size {
+                println!("{:?}", self);
                 self.gradient_descent(dataset);
             }
         }
 
         fn gradient_descent(&mut self, dataset: &Dataset) {
-            self.a -= self.learning_rate * self.cost_a(dataset);
-            self.b -= self.learning_rate * self.cost_b(dataset);
+            let tmp_a = self.a - self.learning_rate * self.cost_a(dataset);
+            let tmp_b = self.b - self.learning_rate * self.cost_b(dataset);
+            self.a = tmp_a;
+            self.b = tmp_b;
         }
 
         fn cost_a(&self, dataset: &Dataset) -> f64 {
             let mut result: f64 = 0.;
             for (key, value) in dataset {
-                result += self.estimate(*key) - *value * *key;
-                println!("result: {result}");
-                println!("key: {}", *key);
-                println!("value: {}", *value);
-                println!("estimate: {}", self.estimate(*key));
-                println!();
+                result += (self.estimate(*key) - *value) * *key;
             }
             return result / dataset.len() as f64;
         }
@@ -63,6 +61,11 @@ pub mod linear_regression {
         fn cost_b(&self, dataset: &Dataset) -> f64 {
             let mut result: f64 = 0.;
             for (key, value) in dataset {
+                // println!("result: {result}");
+                // println!("key: {}", *key);
+                // println!("value: {}", *value);
+                // println!("estimate: {}", self.estimate(*key));
+                // println!();
                 result += self.estimate(*key) - *value;
             }
             return result / dataset.len() as f64;
