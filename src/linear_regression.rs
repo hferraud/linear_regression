@@ -38,7 +38,7 @@ pub mod linear_regression {
 
         pub fn train(&mut self, dataset: &Dataset, size: usize) {
             for _ in 0..size {
-                println!("{:?}", self);
+                // println!("{:?}", self);
                 self.gradient_descent(dataset);
             }
         }
@@ -61,28 +61,66 @@ pub mod linear_regression {
         fn cost_b(&self, dataset: &Dataset) -> f64 {
             let mut result: f64 = 0.;
             for (key, value) in dataset {
-                // println!("result: {result}");
-                // println!("key: {}", *key);
-                // println!("value: {}", *value);
-                // println!("estimate: {}", self.estimate(*key));
-                // println!();
                 result += self.estimate(*key) - *value;
             }
             return result / dataset.len() as f64;
+        }
+
+        pub fn denormalize(&mut self, dataset: &Dataset) {
+            let range_x = dataset.x.max - dataset.x.min;
+            let range_y = dataset.y.max - dataset.y.min;
+            self.a = (range_y) / (range_x) * self.a;
+            self.b = range_y * self.b + dataset.y.min - range_y / range_x * dataset.x.min * self.a;
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct DatasetRow {
+        data: Vec<f64>,
+        pub min: f64,
+        pub max: f64,
+    }
+
+    impl DatasetRow {
+        pub fn new() -> Self {
+            DatasetRow {
+                data: Vec::new(),
+                min: 0.,
+                max: 0.,
+            }
+        }
+
+        pub fn push(&mut self, data: f64){
+            self.data.push(data);
+        }
+
+        pub fn len(&self) -> usize {
+            return self.data.len();
+        }
+
+        fn normalize(&mut self) {
+            self.min = self.data.iter().cloned().fold(f64::INFINITY, f64::min);
+            self.max = self.data.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+
+            let range = self.max - self.min;
+
+            for value in self.data.iter_mut() {
+                *value = (*value - self.min) / range;
+            }
         }
     }
 
     #[derive(Debug)]
     pub struct Dataset {
-        key: Vec<f64>,
-        value: Vec<f64>,
+        x: DatasetRow,
+        y: DatasetRow,
     }
 
     impl Dataset {
         pub fn new() -> Self {
             Dataset {
-                key: Vec::new(),
-                value: Vec::new(),
+                x: DatasetRow::new(),
+                y: DatasetRow::new(),
             }
         }
 
@@ -97,12 +135,16 @@ pub mod linear_regression {
         }
 
         pub fn push(&mut self, row: (f64, f64)) {
-            self.key.push(row.0);
-            self.value.push(row.1);
+            self.x.push(row.0);
+            self.y.push(row.1);
+        }
+        pub fn len(&self) -> usize {
+            return self.x.len();
         }
 
-        pub fn len(&self) -> usize {
-            return self.key.len();
+        pub fn normalize(&mut self) {
+            self.x.normalize();
+            self.y.normalize();
         }
     }
 
@@ -111,8 +153,8 @@ pub mod linear_regression {
         type IntoIter = std::vec::IntoIter<Self::Item>;
 
         fn into_iter(self) -> Self::IntoIter {
-            let keys_ref: &'a Vec<f64> = &self.key;
-            let values_ref: &'a Vec<f64> = &self.value;
+            let keys_ref: &'a Vec<f64> = &self.x.data;
+            let values_ref: &'a Vec<f64> = &self.y.data;
             let tuples = keys_ref.iter().zip(values_ref.iter());
             tuples.collect::<Vec<_>>().into_iter()
         }
@@ -124,8 +166,8 @@ pub mod linear_regression {
         type IntoIter = std::vec::IntoIter<Self::Item>;
 
         fn into_iter(self) -> Self::IntoIter {
-            let keys = self.key;
-            let values = self.value;
+            let keys = self.x.data;
+            let values = self.y.data;
             let tuples = keys.into_iter().zip(values.into_iter());
             tuples.collect::<Vec<_>>().into_iter()
         }
