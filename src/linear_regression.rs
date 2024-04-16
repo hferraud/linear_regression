@@ -4,7 +4,6 @@ pub mod linear_regression {
     use csv::Writer;
     use serde::{Deserialize, Serialize};
 
-    const MODEL_PATH: &str = "assets/linear_model.csv";
 
     #[derive(Debug, Serialize, Deserialize)]
     pub struct LinearModel {
@@ -14,31 +13,40 @@ pub mod linear_regression {
     }
 
     impl LinearModel {
-        pub fn estimate(&self, x: f64) -> f64 {
-            self.a * x + self.b
-        }
 
-        pub fn load() -> Result<Self, Box<dyn Error>> {
-            let file = File::open(MODEL_PATH)?;
-            let mut reader = csv::Reader::from_reader(file);
-            if let Some(result) = reader.deserialize().next() {
-                let model: Self = result?;
-                Ok(model)
-            } else {
-                return Err("test".into())
+        pub fn new() -> Self {
+            LinearModel {
+                a: 0.,
+                b: 0.,
+                learning_rate: 0.1,
             }
         }
 
-        pub fn save(&self) -> Result<(), Box<dyn Error>> {
-            let mut writer = Writer::from_path(MODEL_PATH)?;
+        pub fn load(&mut self, path: &str) -> Result<(), Box<dyn Error>> {
+            let file = File::open(path)?;
+            let mut reader = csv::Reader::from_reader(file);
+            if let Some(result) = reader.deserialize().next() {
+                let model: Self = result?;
+                *self = model;
+                Ok(())
+            } else {
+                Err("An error occurred while loading the model".into())
+            }
+        }
+
+        pub fn save(&self, path: &str) -> Result<(), Box<dyn Error>> {
+            let mut writer = Writer::from_path(path)?;
             writer.serialize(self)?;
             writer.flush()?;
             Ok(())
         }
 
+        pub fn estimate(&self, x: f64) -> f64 {
+            self.a * x + self.b
+        }
+
         pub fn train(&mut self, dataset: &Dataset, size: usize) {
             for _ in 0..size {
-                // println!("{:?}", self);
                 self.gradient_descent(dataset);
             }
         }
