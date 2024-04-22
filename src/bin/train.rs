@@ -15,7 +15,7 @@ struct Args {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
-    let root = BitMapBackend::new("graph.png", (640, 480)).into_drawing_area();
+    let root = SVGBackend::new("graph.png", (640, 480)).into_drawing_area();
     root.fill(&WHITE)?;
 
     let mut dataset = linear_regression::Dataset::new();
@@ -35,12 +35,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     dataset.normalize();
 
     let mut model = linear_regression::LinearModel::new();
-    if let Err(_) = model.load(&args.model_path) {
-        println!("No model detected, creating a new model...");
-    }
     model.train(&dataset, args.iteration);
     model.denormalize(&dataset);
-    model.draw(&mut chart, &dataset)?;
+    model.draw(&mut chart)?;
     model.save(&args.model_path)?;
     println!(
         "Model successfully trained with {} iteration",

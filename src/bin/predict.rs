@@ -15,7 +15,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
 
     let mut model = LinearModel::new();
-    model.load(&args.model_path)?;
+    if let Err(_) = model.load(&args.model_path) {
+        println!("No model detected, creating a new model...");
+    }
     println!(
         "Estimated price for {} km: {}",
         args.mileage,

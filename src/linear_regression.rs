@@ -18,7 +18,7 @@ impl LinearModel {
         LinearModel {
             a: 0.,
             b: 0.,
-            learning_rate: 0.1,
+            learning_rate: 0.2,
         }
     }
 
@@ -81,9 +81,12 @@ impl LinearModel {
         self.b = range_y * self.b + dataset.y.min - range_y / range_x * dataset.x.min * self.a;
     }
 
-    pub fn draw(&self, chart: &mut ChartContext<BitMapBackend, Cartesian2d<RangedCoordf64, RangedCoordf64>>, dataset: &Dataset) -> Result<(), Box<dyn Error>> {
-        let x_start = dataset.x.min;
-        let x_end = dataset.x.max;
+    pub fn draw(&self, chart: &mut ChartContext<SVGBackend, Cartesian2d<RangedCoordf64, RangedCoordf64>>) -> Result<(), Box<dyn Error>> {
+        let y_range = chart.y_range();
+        let y_max = y_range.start;
+        let y_min = y_range.end;
+        let x_start = (y_max - self.b) / self.a;
+        let x_end = (y_min - self.b) / self.a;
         let y_start = self.a * x_start + self.b;
         let y_end = self.a * x_end + self.b;
         chart.draw_series(LineSeries::new(vec![(x_start, y_start), (x_end, y_end)], &BLUE))?;
@@ -164,7 +167,7 @@ impl Dataset {
         return self.x.len();
     }
 
-    pub fn draw(&self, chart: &mut ChartContext<BitMapBackend, Cartesian2d<RangedCoordf64, RangedCoordf64>>) -> Result<(), Box<dyn Error>> {
+    pub fn draw(&self, chart: &mut ChartContext<SVGBackend, Cartesian2d<RangedCoordf64, RangedCoordf64>>) -> Result<(), Box<dyn Error>> {
         chart.draw_series(PointSeries::of_element(
             self.x.data.iter().zip(self.y.data.iter()).map(|(&x, &y)| (x, y)),
             2,
