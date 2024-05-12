@@ -9,12 +9,13 @@ def plot_data(dataset_file, model_file):
 	a = model.loc[0, 'a']
 	b = model.loc[0, 'b']
 
-	plt.scatter(dataset['km'], dataset['price'], label='Data')
+	plt.scatter(dataset['km'], dataset['price'], marker='o', label='Data')
 
 	x_values = dataset['km']
 	y_values = a * x_values + b
 	plt.plot(x_values, y_values, color='red', label=f'Linear regression')
 
+	plt.grid(True)
 	plt.xlabel('km')
 	plt.ylabel('price')
 	plt.legend()
