@@ -80,18 +80,6 @@ impl LinearModel {
         self.a = (range_y) / (range_x) * self.a;
         self.b = range_y * self.b + dataset.y.min - range_y / range_x * dataset.x.min * self.a;
     }
-
-    pub fn draw(&self, chart: &mut ChartContext<SVGBackend, Cartesian2d<RangedCoordf64, RangedCoordf64>>) -> Result<(), Box<dyn Error>> {
-        let y_range = chart.y_range();
-        let y_max = y_range.start;
-        let y_min = y_range.end;
-        let x_start = (y_max - self.b) / self.a;
-        let x_end = (y_min - self.b) / self.a;
-        let y_start = self.a * x_start + self.b;
-        let y_end = self.a * x_end + self.b;
-        chart.draw_series(LineSeries::new(vec![(x_start, y_start), (x_end, y_end)], &BLUE))?;
-        Ok(())
-    }
 }
 
 #[derive(Debug)]
@@ -165,18 +153,6 @@ impl Dataset {
 
     pub fn len(&self) -> usize {
         return self.x.len();
-    }
-
-    pub fn draw(&self, chart: &mut ChartContext<SVGBackend, Cartesian2d<RangedCoordf64, RangedCoordf64>>) -> Result<(), Box<dyn Error>> {
-        chart.draw_series(PointSeries::of_element(
-            self.x.data.iter().zip(self.y.data.iter()).map(|(&x, &y)| (x, y)),
-            2,
-            &RED,
-            &|c, s, st: ShapeStyle| {
-                return EmptyElement::at(c) + Circle::new((0, 0), s, st.filled())
-            },
-        ))?;
-        Ok(())
     }
 
     pub fn normalize(&mut self) {
