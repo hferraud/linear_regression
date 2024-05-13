@@ -24,11 +24,15 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut model = linear_regression::LinearModel::new();
     model.train(&dataset, args.iteration);
-    model.denormalize(&dataset);
-    model.save(&args.model_path)?;
     println!(
         "Model successfully trained with {} iteration",
         args.iteration
     );
+    println!(
+        "Model precision: {}",
+        model.determination_coefficient(&dataset)
+    );
+    model.denormalize(&dataset);
+    model.save(&args.model_path)?;
     Ok(())
 }
