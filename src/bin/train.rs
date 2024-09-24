@@ -1,9 +1,9 @@
 use std::error::Error;
 
 use clap::Parser;
-use plotters::prelude::*;
 
-use linear_regression::linear_regression;
+use linear_regression::dataset::Dataset;
+use linear_regression::linear_regression::LinearModel;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -15,14 +15,12 @@ struct Args {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
-    let root = SVGBackend::new("graph.png", (640, 480)).into_drawing_area();
-    root.fill(&WHITE)?;
 
-    let mut dataset = linear_regression::Dataset::new();
+    let mut dataset = Dataset::new();
     dataset.load(&args.dataset_path)?;
     dataset.normalize();
 
-    let mut model = linear_regression::LinearModel::new();
+    let mut model = LinearModel::new();
     model.train(&dataset, args.iteration);
     println!(
         "Model successfully trained with {} iteration",
