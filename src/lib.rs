@@ -1,2 +1,2 @@
-pub mod linear_regression;
+pub mod linear_model;
 pub mod dataset;

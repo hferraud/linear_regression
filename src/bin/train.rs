@@ -3,7 +3,7 @@ use std::error::Error;
 use clap::Parser;
 
 use linear_regression::dataset::Dataset;
-use linear_regression::linear_regression::LinearModel;
+use linear_regression::linear_model::LinearModel;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

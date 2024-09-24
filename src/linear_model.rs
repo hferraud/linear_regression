@@ -22,14 +22,18 @@ impl LinearModel {
     }
 
     pub fn load(&mut self, path: &str) -> Result<(), Box<dyn Error>> {
-        let file = File::open(path)?;
+        let Ok(file) = File::open(path) else {
+            return Err(format!("Couldn't open the file {path}").into());
+        };
         let mut reader = csv::Reader::from_reader(file);
-        if let Some(result) = reader.deserialize().next() {
-            *self = result?;
-            Ok(())
-        } else {
-            Err("An error occurred while loading the model".into())
-        }
+        let Some(result) = reader.deserialize().next() else {
+            return Err("An error occurred while loading the model".into());
+        };
+        let Ok(model) = result else {
+            return Err("An error occurred while parsing the model".into());
+        };
+        *self = model;
+        Ok(())
     }
 
     pub fn save(&self, path: &str) -> Result<(), Box<dyn Error>> {
@@ -61,7 +65,7 @@ impl LinearModel {
         for (key, value) in dataset {
             result += (self.estimate(*key) - *value) * *key;
         }
-        return result / dataset.len() as f64;
+        result / dataset.len() as f64
     }
 
     fn cost_b(&self, dataset: &Dataset) -> f64 {
@@ -69,7 +73,7 @@ impl LinearModel {
         for (key, value) in dataset {
             result += self.estimate(*key) - *value;
         }
-        return result / dataset.len() as f64;
+        result / dataset.len() as f64
     }
 
     pub fn determination_coefficient(&self, dataset: &Dataset) -> f64 {
@@ -85,5 +89,47 @@ impl LinearModel {
         let range_y = dataset.y.max - dataset.y.min;
         self.a = (range_y) / (range_x) * self.a;
         self.b = range_y * self.b + dataset.y.min - range_y / range_x * dataset.x.min * self.a;
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn model_load_success() {
+        let mut model = LinearModel::new();
+        model.load("tests/model/load_success").unwrap();
+        assert_eq!(model.a, -0.5);
+        assert_eq!(model.b, 0.5);
+        assert_eq!(model.learning_rate, 0.2);
+    }
+
+    #[test]
+    #[should_panic(expected = "Couldn't open the file")]
+    fn model_load_no_file() {
+        let mut model = LinearModel::new();
+        model.load("tests/model/no_file").unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "An error occurred while loading the model")]
+    fn model_load_empty() {
+        let mut model = LinearModel::new();
+        model.load("tests/model/load_empty").unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "An error occurred while loading the model")]
+    fn model_load_no_value() {
+        let mut model = LinearModel::new();
+        model.load("tests/model/load_no_value").unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "An error occurred while parsing the model")]
+    fn model_load_invalid_value() {
+        let mut model = LinearModel::new();
+        model.load("tests/model/load_invalid_value").unwrap();
     }
 }
