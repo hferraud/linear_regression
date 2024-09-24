@@ -25,6 +25,10 @@ impl DatasetRow {
         return self.data.len();
     }
 
+    pub fn dedup(&mut self) {
+        self.data.dedup();
+    }
+
     pub fn set_range(&mut self) {
         self.min = self.data.iter().cloned().fold(f64::INFINITY, f64::min);
         self.max = self.data.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
@@ -46,6 +50,10 @@ pub struct Dataset {
 }
 
 impl Dataset {
+    const OPEN_FILE_ERROR: &'static str = "Couldn't open the file";
+    const LOAD_ERROR: &'static str = "An error occurred while loading the dataset";
+    const NB_ROW_ERROR: &'static str = "The dataset should contain at least 2 row";
+
     pub fn new() -> Self {
         Dataset {
             x: DatasetRow::new(),
@@ -55,20 +63,22 @@ impl Dataset {
 
     pub fn load(&mut self, path: &str) -> Result<(), Box<dyn Error>> {
         let Ok(file) = File::open(path) else {
-            return Err(format!("Couldn't open the file {path}").into());
+            return Err(Self::OPEN_FILE_ERROR.into());
         };
         let mut reader = csv::Reader::from_reader(file);
         for result in reader.deserialize() {
             let Ok(row) = result else {
-                return Err("An error occurred while loading the dataset".into());
+                return Err(Self::LOAD_ERROR.into());
             };
             self.push(row);
         }
-        if self.x.len() <= 1 {
-            return Err("The dataset should contain at least 2 row".into());
+        self.dedup();
+        if self.len() <= 1 {
+            return Err(Self::NB_ROW_ERROR.into());
         }
         self.y.set_range();
         self.x.set_range();
+        dbg!(&self);
         Ok(())
     }
 
@@ -78,7 +88,14 @@ impl Dataset {
     }
 
     pub fn len(&self) -> usize {
-        return self.x.len();
+        self.x.len()
+    }
+
+    pub fn dedup(&mut self) {
+        let mut collect: Vec<_> = self.into_iter().collect();
+        collect.dedup();
+        self.x.data = collect.iter().map(|(x, _)| *x).collect();
+        self.y.data = collect.iter().map(|(_, y)| *y).collect();
     }
 
     pub fn normalize(&mut self) {
@@ -98,18 +115,17 @@ impl<'a> IntoIterator for &'a Dataset {
         tuples.collect::<Vec<_>>().into_iter()
     }
 }
-
-impl IntoIterator for Dataset {
-    type Item = (f64, f64);
-    type IntoIter = std::vec::IntoIter<Self::Item>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        let keys = self.x.data;
-        let values = self.y.data;
-        let tuples = keys.into_iter().zip(values.into_iter());
-        tuples.collect::<Vec<_>>().into_iter()
-    }
-}
+// impl IntoIterator for Dataset {
+//     type Item = (f64, f64);
+//     type IntoIter = std::vec::IntoIter<Self::Item>;
+//
+//     fn into_iter(&self) -> Self::IntoIter {
+//         let keys = &self.x.data;
+//         let values = &self.y.data;
+//         let tuples = keys.into_iter().zip(values.into_iter());
+//         tuples.collect::<Vec<_>>().into_iter()
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
@@ -146,5 +162,12 @@ mod tests {
     fn dataset_load_invalid_value() {
         let mut dataset = Dataset::new();
         dataset.load("tests/model/invalid_value").unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "The dataset should contain at least 2 row")]
+    fn dataset_one_row() {
+        let mut dataset = Dataset::new();
+        dataset.load("tests/dataset/one_row").unwrap();
     }
 }

@@ -19,6 +19,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut dataset = Dataset::new();
     dataset.load(&args.dataset_path)?;
     dataset.normalize();
+    dbg!(&dataset);
 
     let mut model = LinearModel::new();
     model.train(&dataset, args.iteration);
@@ -26,6 +27,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         "Model successfully trained with {} iteration",
         args.iteration
     );
+    dbg!(&model);
     println!(
         "Model precision: {}",
         model.determination_coefficient(&dataset)

@@ -47,8 +47,8 @@ impl LinearModel {
         self.a * x + self.b
     }
 
-    pub fn train(&mut self, dataset: &Dataset, size: usize) {
-        for _ in 0..size {
+    pub fn train(&mut self, dataset: &Dataset, iteration: usize) {
+        for _ in 0..iteration{
             self.gradient_descent(dataset);
         }
     }
