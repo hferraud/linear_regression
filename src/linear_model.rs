@@ -99,7 +99,7 @@ mod test {
     #[test]
     fn model_load_success() {
         let mut model = LinearModel::new();
-        model.load("tests/model/load_success").unwrap();
+        model.load("tests/model/success").unwrap();
         assert_eq!(model.a, -0.5);
         assert_eq!(model.b, 0.5);
         assert_eq!(model.learning_rate, 0.2);
@@ -116,20 +116,20 @@ mod test {
     #[should_panic(expected = "An error occurred while loading the model")]
     fn model_load_empty() {
         let mut model = LinearModel::new();
-        model.load("tests/model/load_empty").unwrap();
+        model.load("tests/model/empty").unwrap();
     }
 
     #[test]
     #[should_panic(expected = "An error occurred while loading the model")]
     fn model_load_no_value() {
         let mut model = LinearModel::new();
-        model.load("tests/model/load_no_value").unwrap();
+        model.load("tests/model/no_value").unwrap();
     }
 
     #[test]
     #[should_panic(expected = "An error occurred while parsing the model")]
     fn model_load_invalid_value() {
         let mut model = LinearModel::new();
-        model.load("tests/model/load_invalid_value").unwrap();
+        model.load("tests/model/invalid_value").unwrap();
     }
 }
