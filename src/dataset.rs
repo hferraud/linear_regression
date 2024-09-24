@@ -69,7 +69,6 @@ impl Dataset {
         }
         self.y.set_range();
         self.x.set_range();
-        dbg!(self);
         Ok(())
     }
 
