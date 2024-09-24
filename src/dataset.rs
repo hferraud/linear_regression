@@ -54,16 +54,22 @@ impl Dataset {
     }
 
     pub fn load(&mut self, path: &str) -> Result<(), Box<dyn Error>> {
-        let file = File::open(path)?;
+        let Ok(file) = File::open(path) else {
+            return Err(format!("Couldn't open the file {path}").into());
+        };
         let mut reader = csv::Reader::from_reader(file);
         for result in reader.deserialize() {
-            // let Ok(record) = result else {
-            //     return Err("An error occurred while loading the model".into());
-            // };
-            self.push(result?);
+            let Ok(row) = result else {
+                return Err("An error occurred while loading the dataset".into());
+            };
+            self.push(row);
+        }
+        if self.x.len() <= 1 {
+            return Err("The dataset should contain at least 2 row".into());
         }
         self.y.set_range();
         self.x.set_range();
+        dbg!(self);
         Ok(())
     }
 
@@ -103,5 +109,43 @@ impl IntoIterator for Dataset {
         let values = self.y.data;
         let tuples = keys.into_iter().zip(values.into_iter());
         tuples.collect::<Vec<_>>().into_iter()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn dataset_load_success() {
+        let mut dataset = Dataset::new();
+        dataset.load("tests/dataset/success").unwrap();
+    }
+    #[test]
+    #[should_panic(expected = "Couldn't open the file")]
+    fn dataset_load_no_file() {
+        let mut dataset = Dataset::new();
+        dataset.load("tests/dataset/no_file").unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "The dataset should contain at least 2 row")]
+    fn dataset_load_empty() {
+        let mut dataset = Dataset::new();
+        dataset.load("tests/dataset/empty").unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "The dataset should contain at least 2 row")]
+    fn dataset_load_no_value() {
+        let mut dataset = Dataset::new();
+        dataset.load("tests/dataset/no_value").unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected = "An error occurred while loading the dataset")]
+    fn dataset_load_invalid_value() {
+        let mut dataset = Dataset::new();
+        dataset.load("tests/model/invalid_value").unwrap();
     }
 }
