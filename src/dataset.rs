@@ -25,10 +25,6 @@ impl DatasetRow {
         return self.data.len();
     }
 
-    pub fn dedup(&mut self) {
-        self.data.dedup();
-    }
-
     pub fn set_range(&mut self) {
         self.min = self.data.iter().cloned().fold(f64::INFINITY, f64::min);
         self.max = self.data.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
@@ -78,7 +74,6 @@ impl Dataset {
         }
         self.y.set_range();
         self.x.set_range();
-        dbg!(&self);
         Ok(())
     }
 
@@ -92,10 +87,11 @@ impl Dataset {
     }
 
     pub fn dedup(&mut self) {
-        let mut collect: Vec<_> = self.into_iter().collect();
-        collect.dedup();
-        self.x.data = collect.iter().map(|(x, _)| *x).collect();
-        self.y.data = collect.iter().map(|(_, y)| *y).collect();
+        let mut tuples: Vec<_> = self.into_iter().map(|(x, y)| (*x, *y)).collect();
+        tuples.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap().then(a.1.partial_cmp(&b.1).unwrap()));
+        tuples.dedup();
+        self.x.data = tuples.iter().map(|(x, _)| x).cloned().collect();
+        self.y.data = tuples.iter().map(|(_, y)| y).cloned().collect();
     }
 
     pub fn normalize(&mut self) {
@@ -104,28 +100,41 @@ impl Dataset {
     }
 }
 
+impl IntoIterator for Dataset {
+    type Item = (f64, f64);
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let keys = self.x.data.clone();
+        let values = self.y.data.clone();
+        let tuples = keys.into_iter().zip(values.into_iter());
+        tuples.collect::<Vec<_>>().into_iter()
+    }
+}
+
 impl<'a> IntoIterator for &'a Dataset {
     type Item = (&'a f64, &'a f64);
     type IntoIter = std::vec::IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
-        let keys_ref: &'a Vec<f64> = &self.x.data;
-        let values_ref: &'a Vec<f64> = &self.y.data;
-        let tuples = keys_ref.iter().zip(values_ref.iter());
+        let keys: &'a Vec<f64> = &self.x.data;
+        let values: &'a Vec<f64> = &self.y.data;
+        let tuples = keys.iter().zip(values.iter());
         tuples.collect::<Vec<_>>().into_iter()
     }
 }
-// impl IntoIterator for Dataset {
-//     type Item = (f64, f64);
-//     type IntoIter = std::vec::IntoIter<Self::Item>;
-//
-//     fn into_iter(&self) -> Self::IntoIter {
-//         let keys = &self.x.data;
-//         let values = &self.y.data;
-//         let tuples = keys.into_iter().zip(values.into_iter());
-//         tuples.collect::<Vec<_>>().into_iter()
-//     }
-// }
+
+impl<'a > IntoIterator for &'a mut Dataset {
+    type Item = (&'a mut f64, &'a mut f64);
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let keys: &'a mut Vec<f64> = &mut self.x.data;
+        let values: &'a mut Vec<f64> = &mut self.y.data;
+        let tuples = keys.iter_mut().zip(values.iter_mut());
+        tuples.collect::<Vec<_>>().into_iter()
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -169,5 +178,20 @@ mod tests {
     fn dataset_one_row() {
         let mut dataset = Dataset::new();
         dataset.load("tests/dataset/one_row").unwrap();
+    }
+
+    #[test]
+    fn dataset_dedup() {
+        let mut dataset = Dataset::new();
+        dataset.load("tests/dataset/dedup").unwrap();
+        assert_eq!(dataset.len(), 4);
+    }
+
+    #[test]
+    fn normalize_same_x() {
+        let mut dataset = Dataset::new();
+        dataset.load("tests/dataset/same_x").unwrap();
+        dataset.normalize();
+        dbg!(dataset);
     }
 }
