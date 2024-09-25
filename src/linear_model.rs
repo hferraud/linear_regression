@@ -9,15 +9,17 @@ use crate::dataset::Dataset;
 pub struct LinearModel {
     pub a: f64,
     pub b: f64,
-    pub learning_rate: f64,
+    pub learning_rate_a: f64,
+    pub learning_rate_b: f64,
 }
 
 impl LinearModel {
-    pub fn new() -> Self {
+    pub fn new(learning_rate_a: f64, learning_rate_b: f64) -> Self {
         LinearModel {
             a: 0.,
             b: 0.,
-            learning_rate: 0.2,
+            learning_rate_a,
+            learning_rate_b,
         }
     }
 
@@ -54,8 +56,8 @@ impl LinearModel {
     }
 
     fn gradient_descent(&mut self, dataset: &Dataset) {
-        let tmp_a = self.a - self.learning_rate * self.cost_a(dataset);
-        let tmp_b = self.b - self.learning_rate * self.cost_b(dataset);
+        let tmp_a = self.a - self.learning_rate_a * self.cost_a(dataset);
+        let tmp_b = self.b - self.learning_rate_b * self.cost_b(dataset);
         self.a = tmp_a;
         self.b = tmp_b;
     }
@@ -98,11 +100,12 @@ mod test {
 
     #[test]
     fn model_load_success() {
-        let mut model = LinearModel::new();
+        let mut model = LinearModel::new(0.1, 0.2);
         model.load("tests/model/success").unwrap();
         assert_eq!(model.a, -0.5);
         assert_eq!(model.b, 0.5);
-        assert_eq!(model.learning_rate, 0.2);
+        assert_eq!(model.learning_rate_a, 0.1);
+        assert_eq!(model.learning_rate_b, 0.2);
     }
 
     #[test]
