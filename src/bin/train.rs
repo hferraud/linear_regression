@@ -7,8 +7,8 @@ use linear_regression::dataset::Dataset;
 use linear_regression::linear_model::LinearModel;
 
 const DEFAULT_ITERATION: usize = 100000;
-const DEFAULT_LEARNING_RATE_A: f64 = 1e-10;
-const DEFAULT_LEARNING_RATE_B: f64 = 0.7;
+const DEFAULT_LEARNING_RATE_A: f64 = 13e-11;
+const DEFAULT_LEARNING_RATE_B: f64 = 0.1;
 const CARTESIAN_X_RANGE: Range<f64> = 0f64..250000f64;
 const CARTESIAN_Y_RANGE: Range<f64> = 0f64..9000f64;
 #[derive(Parser, Debug)]
@@ -42,7 +42,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
     println!(
         "Model precision: {}",
-        model.determination_coefficient(&dataset)
+        model.mean_absolute_error(&dataset)
     );
     model.save(&args.model_path)?;
     plot(&dataset, &model)?;

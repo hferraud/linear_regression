@@ -61,13 +61,13 @@ impl LinearModel {
     }
 
     fn gradient_descent(&mut self, dataset: &Dataset) {
-        let tmp_a = self.a - self.learning_rate_a * self.cost_a(dataset);
-        let tmp_b = self.b - self.learning_rate_b * self.cost_b(dataset);
+        let tmp_a = self.a - self.learning_rate_a * self.gradient_a(dataset);
+        let tmp_b = self.b - self.learning_rate_b * self.gradient_b(dataset);
         self.a = tmp_a;
         self.b = tmp_b;
     }
 
-    fn cost_a(&self, dataset: &Dataset) -> f64 {
+    fn gradient_a(&self, dataset: &Dataset) -> f64 {
         let mut result: f64 = 0.;
         for (key, value) in dataset {
             result += (self.predict(*key) - *value) * *key;
@@ -75,7 +75,7 @@ impl LinearModel {
         result / dataset.len() as f64
     }
 
-    fn cost_b(&self, dataset: &Dataset) -> f64 {
+    fn gradient_b(&self, dataset: &Dataset) -> f64 {
         let mut result: f64 = 0.;
         for (key, value) in dataset {
             result += self.predict(*key) - *value;
@@ -83,28 +83,11 @@ impl LinearModel {
         result / dataset.len() as f64
     }
 
-    pub fn determination_coefficient(&self, dataset: &Dataset) -> f64 {
-        let dataset_mean: f64 = dataset.y.data.iter().sum::<f64>() / dataset.y.data.len() as f64;
-        let square_sum_total: f64 = dataset
-            .y
-            .data
-            .iter()
-            .map(|y| (y - dataset_mean).powi(2))
-            .sum();
-        let y_pred: Vec<f64> = dataset
-            .x
-            .data
-            .iter()
-            .map(|x| (self.a * x + self.b))
-            .collect();
-        let square_sum_residual: f64 = dataset
-            .y
-            .data
-            .iter()
-            .zip(y_pred.iter())
-            .map(|(y_true, y_pred)| (y_true - y_pred).powi(2))
-            .sum();
-        1.0 - (square_sum_residual / square_sum_total)
+    pub fn mean_absolute_error(&self, dataset: &Dataset) -> f64 {
+        let squared_error: f64 = dataset.into_iter().map(|(x, y)|
+                (y - self.predict(*x)).abs()
+            ).sum();
+        squared_error / dataset.len() as f64
     }
 }
 
