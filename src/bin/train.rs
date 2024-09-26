@@ -1,7 +1,7 @@
-use std::error::Error;
-
 use clap::Parser;
 use plotters::prelude::*;
+use std::error::Error;
+use std::ops::Range;
 
 use linear_regression::dataset::Dataset;
 use linear_regression::linear_model::LinearModel;
@@ -9,7 +9,8 @@ use linear_regression::linear_model::LinearModel;
 const DEFAULT_ITERATION: usize = 100000;
 const DEFAULT_LEARNING_RATE_A: f64 = 1e-10;
 const DEFAULT_LEARNING_RATE_B: f64 = 0.7;
-
+const CARTESIAN_X_RANGE: Range<f64> = 0f64..250000f64;
+const CARTESIAN_Y_RANGE: Range<f64> = 0f64..9000f64;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
@@ -59,7 +60,7 @@ fn plot(dataset: &Dataset, linear_model: &LinearModel) -> Result<(), Box<dyn Err
         .margin(5)
         .x_label_area_size(30)
         .y_label_area_size(50)
-        .build_cartesian_2d(0f64..250000f64, 0f64..9000f64)?;
+        .build_cartesian_2d(CARTESIAN_X_RANGE, CARTESIAN_Y_RANGE)?;
 
     chart.configure_mesh().draw()?;
     chart.draw_series(PointSeries::of_element(
@@ -74,11 +75,14 @@ fn plot(dataset: &Dataset, linear_model: &LinearModel) -> Result<(), Box<dyn Err
         &|coord, size, style| Circle::new(coord, size, style.filled()),
     ))?;
     chart.draw_series(LineSeries::new(
-        dataset
-            .x
-            .data
-            .iter()
-            .map(|x| (*x, linear_model.predict(*x))),
+        dataset.x.data.iter().filter_map(|x| {
+            match linear_model.predict(*x) > CARTESIAN_X_RANGE.start
+                && linear_model.predict(*x) < CARTESIAN_X_RANGE.end
+            {
+                true => Some((*x, linear_model.predict(*x))),
+                false => None,
+            }
+        }),
         &BLACK,
     ))?;
     root.present()?;
