@@ -85,7 +85,7 @@ impl IntoIterator for Dataset {
     fn into_iter(self) -> Self::IntoIter {
         let keys = self.x.data.clone();
         let values = self.y.data.clone();
-        let tuples = keys.into_iter().zip(values.into_iter());
+        let tuples = keys.into_iter().zip(values);
         tuples.collect::<Vec<_>>().into_iter()
     }
 }

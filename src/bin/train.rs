@@ -68,8 +68,8 @@ fn plot(dataset: &Dataset, linear_model: &LinearModel) -> Result<(), Box<dyn Err
             .x
             .data
             .iter()
-            .map(|x| *x)
-            .zip(dataset.y.data.iter().map(|y| *y)),
+            .copied()
+            .zip(dataset.y.data.iter().copied()),
         3,
         &RED,
         &|coord, size, style| Circle::new(coord, size, style.filled()),
