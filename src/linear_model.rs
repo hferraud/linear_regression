@@ -55,7 +55,7 @@ impl LinearModel {
     }
 
     pub fn train(&mut self, dataset: &Dataset, iteration: usize) {
-        for _ in 0..iteration{
+        for _ in 0..iteration {
             self.gradient_descent(dataset);
         }
     }
@@ -85,9 +85,25 @@ impl LinearModel {
 
     pub fn determination_coefficient(&self, dataset: &Dataset) -> f64 {
         let dataset_mean: f64 = dataset.y.data.iter().sum::<f64>() / dataset.y.data.len() as f64;
-        let square_sum_total: f64 = dataset.y.data.iter().map(|y| (y - dataset_mean).powi(2)).sum();
-        let y_pred: Vec<f64> = dataset.x.data.iter().map(|x| (self.a * x + self.b)).collect();
-        let square_sum_residual: f64 = dataset.y.data.iter().zip(y_pred.iter()).map(|(y_true, y_pred)| (y_true - y_pred).powi(2)).sum();
+        let square_sum_total: f64 = dataset
+            .y
+            .data
+            .iter()
+            .map(|y| (y - dataset_mean).powi(2))
+            .sum();
+        let y_pred: Vec<f64> = dataset
+            .x
+            .data
+            .iter()
+            .map(|x| (self.a * x + self.b))
+            .collect();
+        let square_sum_residual: f64 = dataset
+            .y
+            .data
+            .iter()
+            .zip(y_pred.iter())
+            .map(|(y_true, y_pred)| (y_true - y_pred).powi(2))
+            .sum();
         1.0 - (square_sum_residual / square_sum_total)
     }
 }

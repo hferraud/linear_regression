@@ -52,7 +52,10 @@ fn plot(dataset: &Dataset, linear_model: &LinearModel) -> Result<(), Box<dyn Err
     let root = BitMapBackend::new("assets/plot.png", (800, 600)).into_drawing_area();
     root.fill(&WHITE)?;
     let mut chart = ChartBuilder::on(&root)
-        .caption("Car price by mileage prediction", ("sans-serif", 30).into_font())
+        .caption(
+            "Car price by mileage prediction",
+            ("sans-serif", 30).into_font(),
+        )
         .margin(5)
         .x_label_area_size(30)
         .y_label_area_size(50)
@@ -60,15 +63,22 @@ fn plot(dataset: &Dataset, linear_model: &LinearModel) -> Result<(), Box<dyn Err
 
     chart.configure_mesh().draw()?;
     chart.draw_series(PointSeries::of_element(
-        dataset.x.data.iter().map(|x| *x).zip(dataset.y.data.iter().map(|y| *y)),
+        dataset
+            .x
+            .data
+            .iter()
+            .map(|x| *x)
+            .zip(dataset.y.data.iter().map(|y| *y)),
         3,
         &RED,
-        & |coord, size ,style| {
-            Circle::new(coord, size, style.filled())
-        }
+        &|coord, size, style| Circle::new(coord, size, style.filled()),
     ))?;
     chart.draw_series(LineSeries::new(
-        dataset.x.data.iter().map(|x| (*x, linear_model.predict(*x))),
+        dataset
+            .x
+            .data
+            .iter()
+            .map(|x| (*x, linear_model.predict(*x))),
         &BLACK,
     ))?;
     root.present()?;

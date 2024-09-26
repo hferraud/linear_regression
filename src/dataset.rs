@@ -8,9 +8,7 @@ pub struct DatasetRow {
 
 impl DatasetRow {
     pub fn new() -> Self {
-        DatasetRow {
-            data: Vec::new(),
-        }
+        DatasetRow { data: Vec::new() }
     }
 
     pub fn push(&mut self, data: f64) {
@@ -69,7 +67,11 @@ impl Dataset {
 
     pub fn dedup(&mut self) {
         let mut tuples: Vec<_> = self.into_iter().map(|(x, y)| (*x, *y)).collect();
-        tuples.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap().then(a.1.partial_cmp(&b.1).unwrap()));
+        tuples.sort_by(|a, b| {
+            a.0.partial_cmp(&b.0)
+                .unwrap()
+                .then(a.1.partial_cmp(&b.1).unwrap())
+        });
         tuples.dedup();
         self.x.data = tuples.iter().map(|(x, _)| x).cloned().collect();
         self.y.data = tuples.iter().map(|(_, y)| y).cloned().collect();
@@ -100,7 +102,7 @@ impl<'a> IntoIterator for &'a Dataset {
     }
 }
 
-impl<'a > IntoIterator for &'a mut Dataset {
+impl<'a> IntoIterator for &'a mut Dataset {
     type Item = (&'a mut f64, &'a mut f64);
     type IntoIter = std::vec::IntoIter<Self::Item>;
 
