@@ -68,19 +68,19 @@ impl LinearModel {
     }
 
     fn gradient_a(&self, dataset: &Dataset) -> f64 {
-        let mut result: f64 = 0.;
-        for (key, value) in dataset {
-            result += (self.predict(*key) - *value) * *key;
+        let mut sum: f64 = 0.;
+        for (x, y) in dataset {
+            sum += (self.predict(*x) - y) * x;
         }
-        result / dataset.len() as f64
+        2. * sum / dataset.len() as f64
     }
 
     fn gradient_b(&self, dataset: &Dataset) -> f64 {
-        let mut result: f64 = 0.;
-        for (key, value) in dataset {
-            result += self.predict(*key) - *value;
+        let mut sum: f64 = 0.;
+        for (x, y) in dataset {
+            sum += self.predict(*x) - y;
         }
-        result / dataset.len() as f64
+        2. * sum / dataset.len() as f64
     }
 
     pub fn mean_absolute_error(&self, dataset: &Dataset) -> f64 {
