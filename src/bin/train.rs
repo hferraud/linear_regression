@@ -11,7 +11,8 @@ const DEFAULT_LEARNING_RATE_A: f64 = 76e-12;
 const DEFAULT_LEARNING_RATE_B: f64 = 1e-4;
 const CARTESIAN_X_RANGE: Range<f64> = 0f64..250000f64;
 const CARTESIAN_Y_RANGE: Range<f64> = 0f64..9000f64;
-#[derive(Parser, Debug)]
+
+#[derive(Parser)]
 #[command(version, about, long_about = None)]
 struct Args {
     dataset_path: String,
