@@ -19,7 +19,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!(
         "Estimated price for {} km: {}",
         args.mileage,
-        model.estimate(args.mileage)
+        model.predict(args.mileage)
     );
     Ok(())
 }

@@ -14,13 +14,18 @@ pub struct LinearModel {
 }
 
 impl LinearModel {
-    pub fn new(learning_rate_a: f64, learning_rate_b: f64) -> Self {
+    pub fn new() -> Self {
         LinearModel {
             a: 0.,
             b: 0.,
-            learning_rate_a,
-            learning_rate_b,
+            learning_rate_a: 0.,
+            learning_rate_b: 0.,
         }
+    }
+
+    pub fn set_learning_rate(&mut self, learning_rate_a: f64, learning_rate_b: f64) {
+        self.learning_rate_a = learning_rate_a;
+        self.learning_rate_b = learning_rate_b;
     }
 
     pub fn load(&mut self, path: &str) -> Result<(), Box<dyn Error>> {
@@ -45,7 +50,7 @@ impl LinearModel {
         Ok(())
     }
 
-    pub fn estimate(&self, x: f64) -> f64 {
+    pub fn predict(&self, x: f64) -> f64 {
         self.a * x + self.b
     }
 
@@ -65,7 +70,7 @@ impl LinearModel {
     fn cost_a(&self, dataset: &Dataset) -> f64 {
         let mut result: f64 = 0.;
         for (key, value) in dataset {
-            result += (self.estimate(*key) - *value) * *key;
+            result += (self.predict(*key) - *value) * *key;
         }
         result / dataset.len() as f64
     }
@@ -73,7 +78,7 @@ impl LinearModel {
     fn cost_b(&self, dataset: &Dataset) -> f64 {
         let mut result: f64 = 0.;
         for (key, value) in dataset {
-            result += self.estimate(*key) - *value;
+            result += self.predict(*key) - *value;
         }
         result / dataset.len() as f64
     }
@@ -85,13 +90,6 @@ impl LinearModel {
         let square_sum_residual: f64 = dataset.y.data.iter().zip(y_pred.iter()).map(|(y_true, y_pred)| (y_true - y_pred).powi(2)).sum();
         1.0 - (square_sum_residual / square_sum_total)
     }
-
-    pub fn denormalize(&mut self, dataset: &Dataset) {
-        let range_x = dataset.x.max - dataset.x.min;
-        let range_y = dataset.y.max - dataset.y.min;
-        self.a = (range_y) / (range_x) * self.a;
-        self.b = range_y * self.b + dataset.y.min - range_y / range_x * dataset.x.min * self.a;
-    }
 }
 
 #[cfg(test)]
@@ -100,7 +98,7 @@ mod test {
 
     #[test]
     fn model_load_success() {
-        let mut model = LinearModel::new(0.1, 0.2);
+        let mut model = LinearModel::new();
         model.load("tests/model/success").unwrap();
         assert_eq!(model.a, -0.5);
         assert_eq!(model.b, 0.5);

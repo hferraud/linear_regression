@@ -1,13 +1,14 @@
 use std::error::Error;
 
 use clap::Parser;
+use plotters::prelude::*;
 
 use linear_regression::dataset::Dataset;
 use linear_regression::linear_model::LinearModel;
 
 const DEFAULT_ITERATION: usize = 100000;
-const DEFAULT_LEARNING_RATE_A: f64 = 0.0000000001;
-const DEFAULT_LEARNING_RATE_B: f64 = 0.001;
+const DEFAULT_LEARNING_RATE_A: f64 = 1e-10;
+const DEFAULT_LEARNING_RATE_B: f64 = 0.7;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -31,7 +32,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut dataset = Dataset::new();
     dataset.load(&args.dataset_path)?;
 
-    let mut model = LinearModel::new(args.a_learning_rate, args.b_learning_rate);
+    let mut model = LinearModel::new();
+    model.set_learning_rate(args.a_learning_rate, args.b_learning_rate);
     model.train(&dataset, args.iteration);
     println!(
         "Model successfully trained with {} iteration",
@@ -42,5 +44,33 @@ fn main() -> Result<(), Box<dyn Error>> {
         model.determination_coefficient(&dataset)
     );
     model.save(&args.model_path)?;
+    plot(&dataset, &model)?;
+    Ok(())
+}
+
+fn plot(dataset: &Dataset, linear_model: &LinearModel) -> Result<(), Box<dyn Error>> {
+    let root = BitMapBackend::new("assets/plot.png", (800, 600)).into_drawing_area();
+    root.fill(&WHITE)?;
+    let mut chart = ChartBuilder::on(&root)
+        .caption("Car price by mileage prediction", ("sans-serif", 30).into_font())
+        .margin(5)
+        .x_label_area_size(30)
+        .y_label_area_size(50)
+        .build_cartesian_2d(0f64..250000f64, 0f64..9000f64)?;
+
+    chart.configure_mesh().draw()?;
+    chart.draw_series(PointSeries::of_element(
+        dataset.x.data.iter().map(|x| *x).zip(dataset.y.data.iter().map(|y| *y)),
+        3,
+        &RED,
+        & |coord, size ,style| {
+            Circle::new(coord, size, style.filled())
+        }
+    ))?;
+    chart.draw_series(LineSeries::new(
+        dataset.x.data.iter().map(|x| (*x, linear_model.predict(*x))),
+        &BLACK,
+    ))?;
+    root.present()?;
     Ok(())
 }

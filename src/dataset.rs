@@ -4,16 +4,12 @@ use std::fs::File;
 #[derive(Debug)]
 pub struct DatasetRow {
     pub data: Vec<f64>,
-    pub min: f64,
-    pub max: f64,
 }
 
 impl DatasetRow {
     pub fn new() -> Self {
         DatasetRow {
             data: Vec::new(),
-            min: 0.,
-            max: 0.,
         }
     }
 
@@ -22,20 +18,7 @@ impl DatasetRow {
     }
 
     pub fn len(&self) -> usize {
-        return self.data.len();
-    }
-
-    pub fn set_range(&mut self) {
-        self.min = self.data.iter().cloned().fold(f64::INFINITY, f64::min);
-        self.max = self.data.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-    }
-
-    fn normalize(&mut self) {
-        let range = self.max - self.min;
-
-        for value in self.data.iter_mut() {
-            *value = (*value - self.min) / range;
-        }
+        self.data.len()
     }
 }
 
@@ -72,8 +55,6 @@ impl Dataset {
         if self.len() <= 1 {
             return Err(Self::NB_ROW_ERROR.into());
         }
-        self.y.set_range();
-        self.x.set_range();
         Ok(())
     }
 
@@ -92,11 +73,6 @@ impl Dataset {
         tuples.dedup();
         self.x.data = tuples.iter().map(|(x, _)| x).cloned().collect();
         self.y.data = tuples.iter().map(|(_, y)| y).cloned().collect();
-    }
-
-    pub fn normalize(&mut self) {
-        self.x.normalize();
-        self.y.normalize();
     }
 }
 
@@ -185,13 +161,5 @@ mod tests {
         let mut dataset = Dataset::new();
         dataset.load("tests/dataset/dedup").unwrap();
         assert_eq!(dataset.len(), 4);
-    }
-
-    #[test]
-    fn normalize_same_x() {
-        let mut dataset = Dataset::new();
-        dataset.load("tests/dataset/same_x").unwrap();
-        dataset.normalize();
-        dbg!(dataset);
     }
 }
