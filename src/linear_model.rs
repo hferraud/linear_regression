@@ -72,7 +72,7 @@ impl LinearModel {
         for (x, y) in dataset {
             sum += (self.predict(*x) - y) * x;
         }
-        2. * sum / dataset.len() as f64
+        sum / dataset.len() as f64
     }
 
     fn gradient_b(&self, dataset: &Dataset) -> f64 {
@@ -80,7 +80,7 @@ impl LinearModel {
         for (x, y) in dataset {
             sum += self.predict(*x) - y;
         }
-        2. * sum / dataset.len() as f64
+        sum / dataset.len() as f64
     }
 
     pub fn mean_absolute_error(&self, dataset: &Dataset) -> f64 {

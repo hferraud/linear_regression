@@ -7,8 +7,8 @@ use linear_regression::dataset::Dataset;
 use linear_regression::linear_model::LinearModel;
 
 const DEFAULT_ITERATION: usize = 100000;
-const DEFAULT_LEARNING_RATE_A: f64 = 76e-12;
-const DEFAULT_LEARNING_RATE_B: f64 = 1e-4;
+const DEFAULT_LEARNING_RATE_A: f64 = 1e-10;
+const DEFAULT_LEARNING_RATE_B: f64 = 0.5;
 const CARTESIAN_X_RANGE: Range<f64> = 0f64..250000f64;
 const CARTESIAN_Y_RANGE: Range<f64> = 0f64..9000f64;
 
